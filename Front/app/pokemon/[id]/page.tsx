@@ -106,12 +106,38 @@ export default function PokemonDetailPage() {
     setIsEditing(true)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editedPokemon) {
-      setPokemon(editedPokemon)
-      setIsEditing(false)
-      // Here you would typically save to a backend
-      console.log("Saving pokemon:", editedPokemon)
+      // Construction du corps pour le backend
+      const body = {
+        name: editedPokemon.name,
+        type_1: editedPokemon.types[0] || null,
+        type_2: editedPokemon.types[1] || null,
+        height: (editedPokemon.height / 10).toString() + ' m',
+        weight: (editedPokemon.weight / 10).toString() + ' kg',
+        description: editedPokemon.description,
+        hp: editedPokemon.stats?.hp,
+        attack: editedPokemon.stats?.attack,
+        defense: editedPokemon.stats?.defense,
+        sp_attack: editedPokemon.stats?.specialAttack,
+        sp_defense: editedPokemon.stats?.specialDefense,
+        speed: editedPokemon.stats?.speed
+      };
+      try {
+        const response = await fetch(`http://localhost:3001/pokemons/${pokemonId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!response.ok) {
+          throw new Error('Erreur lors de la sauvegarde');
+        }
+        setPokemon(editedPokemon);
+        setIsEditing(false);
+      } catch (e) {
+        alert('Erreur lors de la sauvegarde du Pokémon');
+        console.error(e);
+      }
     }
   }
 

@@ -84,6 +84,66 @@ app.delete("/pokemons/:id", (req, res) => {
   res.json({ deleted });
 });
 
+// PUT : éditer un Pokémon
+app.put('/pokemons/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const {
+    name,
+    type_1,
+    type_2,
+    height,
+    weight,
+    description,
+    hp,
+    attack,
+    defense,
+    sp_attack,
+    sp_defense,
+    speed
+  } = req.body;
+  console.log(req.body);
+  db.run(
+    `UPDATE pokemon SET
+      name = ?,
+      type_1 = ?,
+      type_2 = ?,
+      height = ?,
+      weight = ?,
+      description = ?,
+      hp = ?,
+      attack = ?,
+      defense = ?,
+      sp_attack = ?,
+      sp_defense = ?,
+      speed = ?
+    WHERE id = ?`,
+    [
+      name,
+      type_1,
+      type_2,
+      height,
+      weight,
+      description,
+      hp,
+      attack,
+      defense,
+      sp_attack,
+      sp_defense,
+      speed,
+      id
+    ],
+    function (err) {
+      if (err) {
+        res.status(500).json({ error: 'Erreur lors de la mise à jour du Pokémon', details: err });
+      } else if (this.changes === 0) {
+        res.status(404).json({ error: 'Pokémon non trouvé' });
+      } else {
+        res.json({ success: true });
+      }
+    }
+  );
+});
+
 // Démarrer le serveur
 app.listen(port, () => {
   console.log(`Serveur démarré sur http://localhost:${port}`);
