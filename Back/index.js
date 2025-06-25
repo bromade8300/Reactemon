@@ -56,18 +56,45 @@ app.get("/pokemons/:id", (req, res) => {
 app.post("/pokemons", (req, res) => {
   const newPokemon = req.body;
 
-  if (!newPokemon.id || !newPokemon.name || !newPokemon.type) {
+  if (!newPokemon.id || !newPokemon.name || !newPokemon.type_1) {
     return res.status(400).json({ error: "Données invalides" });
   }
 
-  // Vérifier qu'il n'existe pas déjà
-  if (pokedex.pokemons.find(p => p.id === newPokemon.id)) {
-    return res.status(409).json({ error: "ID déjà existant" });
-  }
-
-  pokedex.pokemons.push(newPokemon);
-  fs.writeFileSync("./pokedex.json", JSON.stringify(pokedex, null, 2));
-  res.status(201).json(newPokemon);
+  db.get("SELECT id FROM pokemon WHERE id = ?", [newPokemon.id], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: "Erreur lors de la vérification de l'ID" });
+    }
+    if (row) {
+      return res.status(409).json({ error: "ID déjà existant" });
+    }
+    db.run(
+      `INSERT INTO pokemon (id, name, national_number, type_1, type_2, height, weight, description, hp, attack, defense, sp_attack, sp_defense, speed)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        newPokemon.id,
+        newPokemon.name,
+        newPokemon.id, // national_number = id (par défaut)
+        newPokemon.type_1,
+        newPokemon.type_2 || null,
+        newPokemon.height,
+        newPokemon.weight,
+        newPokemon.description,
+        newPokemon.hp,
+        newPokemon.attack,
+        newPokemon.defense,
+        newPokemon.sp_attack,
+        newPokemon.sp_defense,
+        newPokemon.speed
+      ],
+      function (err) {
+        if (err) {
+          res.status(500).json({ error: "Erreur lors de l'insertion", details: err });
+        } else {
+          res.status(201).json({ success: true, id: newPokemon.id });
+        }
+      }
+    );
+  });
 });
 
 // DELETE : supprimer un Pokémon
