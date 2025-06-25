@@ -33,7 +33,7 @@ export default function PokemonDetailPage() {
   const params = useParams()
   const router = useRouter()
   const pokemonId = Number.parseInt(params.id as string)
-
+  console.log("Pokemon ID:", pokemonId)
   const [pokemon, setPokemon] = useState<Pokemon | null>(null)
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
@@ -50,33 +50,32 @@ export default function PokemonDetailPage() {
   const fetchPokemonDetails = async () => {
     try {
       setLoading(true)
-      const [pokemonResponse, speciesResponse] = await Promise.all([
-        fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`),
-        fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemonId}`),
+      const [pokemonResponse] = await Promise.all([
+        fetch(`http://localhost:3001/pokemons/${pokemonId}`)
       ])
 
       const pokemonData = await pokemonResponse.json()
-      const speciesData = await speciesResponse.json()
 
-      const englishEntry = speciesData.flavor_text_entries.find((entry: any) => entry.language.name === "en")
+      // Récupérer les types depuis type_1 et type_2
+      const types = [pokemonData.type_1, pokemonData.type_2].filter(Boolean)
 
       const detailedPokemon: Pokemon = {
         id: pokemonData.id,
         name: pokemonData.name,
-        types: pokemonData.types.map((type: any) => type.type.name),
-        image: pokemonData.sprites.front_default,
-        height: pokemonData.height,
-        weight: pokemonData.weight,
+        types: types,
+        image: `/sprites/${pokemonData.id.toString().padStart(3, "0")}.png`,
+        height: Number(pokemonData.height?.replace(' m', '')) * 10 || 0, // conversion en décimètres
+        weight: Number(pokemonData.weight?.replace(' kg', '')) * 10 || 0, // conversion en hectogrammes
         stats: {
-          hp: pokemonData.stats[0].base_stat,
-          attack: pokemonData.stats[1].base_stat,
-          defense: pokemonData.stats[2].base_stat,
-          specialAttack: pokemonData.stats[3].base_stat,
-          specialDefense: pokemonData.stats[4].base_stat,
-          speed: pokemonData.stats[5].base_stat,
+          hp: pokemonData.hp,
+          attack: pokemonData.attack,
+          defense: pokemonData.defense,
+          specialAttack: pokemonData.sp_attack,
+          specialDefense: pokemonData.sp_defense,
+          speed: pokemonData.speed,
         },
-        abilities: pokemonData.abilities.map((ability: any) => ability.ability.name),
-        description: englishEntry?.flavor_text.replace(/\f/g, " ") || "No description available.",
+        abilities: [], // non présent dans la réponse, à adapter si besoin
+        description: pokemonData.description || "No description available.",
       }
 
       setPokemon(detailedPokemon)
