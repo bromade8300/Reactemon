@@ -47,20 +47,28 @@ export default function PokemonListPage() {
       const typesSet = new Set<string>()
 
       for (let i = 1; i <= 151; i++) {
-        const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${i}`)
+        const response = await fetch(`http://localhost:3001/pokemons/${i}`)
         const data = await response.json()
+
+        // Gérer le cas où types est une chaîne simple ou un tableau d'objets
+        let types: string[] = []
+        if (data.types && Array.isArray(data.types)) {
+          types = data.types.map((type: any) => type.type?.name || type)
+        } else if (data.type) {
+          types = [data.type]
+        }
 
         const pokemon: Pokemon = {
           id: data.id,
           name: data.name,
-          types: data.types.map((type: any) => type.type.name),
-          image: data.sprites.front_default,
+          types: types,
+          image: `/sprites/${data.id.toString().padStart(3, "0")}.png`,
           height: data.height,
           weight: data.weight,
         }
 
         pokemonData.push(pokemon)
-        pokemon.types.forEach((type) => typesSet.add(type))
+        types.forEach((type) => typesSet.add(type))
       }
 
       setAllPokemon(pokemonData)
@@ -233,7 +241,7 @@ export default function PokemonListPage() {
                 <SelectItem value="all">TOUS LES TYPES</SelectItem>
                 {allTypes.map((type) => (
                   <SelectItem key={type} value={type}>
-                    {type.toUpperCase()}
+                    {(type || '').toString().toUpperCase()}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -328,10 +336,9 @@ export default function PokemonListPage() {
 
                     <h3 className="pixel-name cursor-pointer">{pokemon.name.toUpperCase()}</h3>
 
-                    <div className="flex flex-wrap gap-1 justify-center">
-                      {pokemon.types.map((type) => (
+                    <div className="flex flex-wrap gap-1 justify-center">                      {pokemon.types.map((type) => (
                         <Badge key={type} className={`pixel-type ${getTypeColor(type)}`}>
-                          {type.toUpperCase()}
+                          {(type || '').toString().toUpperCase()}
                         </Badge>
                       ))}
                     </div>

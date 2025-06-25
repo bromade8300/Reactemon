@@ -2,7 +2,7 @@ const express = require("express");
 const fs = require("fs");
 const sqlite3 = require('sqlite3').verbose();
 const app = express();
-const port = 3000;
+const port = 3001;
 const cors = require("cors");
 
 app.use(cors())
@@ -10,7 +10,7 @@ app.use(cors())
 // Connexion à la base de données SQLite
 const db = new sqlite3.Database('./Pokemon.db', (err) => {
   if (err) {
-    console.error('Erreur de connexion à la base de données:', err);
+    console.error(err, err);
   } else {
     console.log('Connexion à la base de données SQLite établie');
   }
@@ -21,7 +21,7 @@ app.use(express.json());
 
 // GET all pokemons
 app.get("/pokemons", (req, res) => {
-  db.all("SELECT * FROM pokemons", [], (err, rows) => {
+  db.all("SELECT * FROM pokemon", [], (err, rows) => {
     if (err) {
       res.status(500).json({ err });
       return; 
@@ -35,12 +35,17 @@ app.get("/pokemons/:id", (req, res) => {
   const id = parseInt(req.params.id);
   db.get("SELECT * FROM pokemon WHERE id = ?", [id], (err, pokemon) => {
     if (err) {
-      res.status(500).json({ error: "Erreur lors de la récupération du pokémon" });
+      res.status(500).json({ err });
       return;
     }
     
     if (pokemon) {
-      res.json(pokemon);
+      // Transformer le type en format attendu par le frontend
+      const formattedPokemon = {
+        ...pokemon,
+        types: [{ type: { name: pokemon.type } }], // Convertir le type en format attendu
+      };
+      res.json(formattedPokemon);
     } else {
       res.status(404).json({ error: "Pokémon non trouvé" });
     }
