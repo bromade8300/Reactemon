@@ -40,10 +40,11 @@ app.get("/pokemons/:id", (req, res) => {
     }
     
     if (pokemon) {
-      // Transformer le type en format attendu par le frontend
+      // Retourner un tableau de chaînes pour les types
+      const types = [pokemon.type_1, pokemon.type_2].filter(Boolean);
       const formattedPokemon = {
         ...pokemon,
-        types: [{ type: { name: pokemon.type } }], // Convertir le type en format attendu
+        types: types,
       };
       res.json(formattedPokemon);
     } else {

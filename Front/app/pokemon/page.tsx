@@ -68,12 +68,19 @@ export default function PokemonListPage() {
         const response = await fetch(`http://localhost:3001/pokemons/${i}`)
         const data = await response.json()
 
-        // Gérer le cas où types est une chaîne simple ou un tableau d'objets
-        let types: string[] = []
+        // Extraction robuste des types
+        let types: string[] = [];
         if (data.types && Array.isArray(data.types)) {
-          types = data.types.map((type: any) => type.type?.name || type)
-        } else if (data.type) {
-          types = [data.type]
+          types = data.types.map((t: any) => {
+            if (typeof t === 'string') return t;
+            if (t.type && typeof t.type.name === 'string') return t.type.name;
+            if (t.name) return t.name;
+            return String(t);
+          });
+        } else if (data.type_1 || data.type) {
+          // type_1 (backend) ou type (ancien format)
+          types = [data.type_1 || data.type];
+          if (data.type_2) types.push(data.type_2);
         }
 
         const pokemon: Pokemon = {
@@ -86,7 +93,9 @@ export default function PokemonListPage() {
         }
 
         pokemonData.push(pokemon)
-        types.forEach((type) => typesSet.add(type))
+        types.forEach((type) => {
+          if (typeof type === 'string') typesSet.add(type)
+        })
       }
 
       setAllPokemon(pokemonData)
