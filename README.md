@@ -43,4 +43,5 @@ L’installation doit être claire et fonctionnelle, par exemple :
 git clone https://github.com/bromade8300/Reactemon.git
 cd Reactemon
 npm install
-npm run start
+npm run dev
+```
