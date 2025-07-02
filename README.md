@@ -40,7 +40,7 @@ Nous utilisons ce dépôt pour remplir la base avec des Pokémon :
 
 L’installation doit être claire et fonctionnelle, par exemple :
 ```bash
-git clone [<repo>](https://github.com/bromade8300/Reactemon.git)
-cd <Reactemon
+git clone https://github.com/bromade8300/Reactemon.git
+cd Reactemon
 npm install
 npm run start
