@@ -1,7 +1,7 @@
 # 📘 Pokedex - Reactemon
 
 Bienvenue sur notre projet **Reactemon** !  
-Ce projet a pour objectif de reproduire l’encyclopédie des Pokémon avec des fonctionnalités modernes, incluant l’authentification, la gestion des favoris, et bien plus encore.
+Ce projet a pour objectif de reproduire l’encyclopédie des Pokémon avec des fonctionnalités incluant l’authentification, la gestion des favoris, et bien plus encore le tout dans un thème pixel art pour les nostalgiques des premières versions en 2D.
 
 ---
 
