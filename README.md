@@ -22,6 +22,9 @@ Le projet est un site web qui permet :
 - Tests :
   - e2e (bonus) : Cypress
 - Style : Tailwind CSS
+![image](https://github.com/user-attachments/assets/3a2f7544-88a7-42f2-93a1-ebb8dcee204b)
+![image](https://github.com/user-attachments/assets/14fe67db-0aac-4803-a244-54bc9a4bc4e9)
+![image](https://github.com/user-attachments/assets/4cf59007-e4a8-4886-872c-e9feb648811a)
 
 ### Backend
 - Base de données : **SQLite** ou équivalent
