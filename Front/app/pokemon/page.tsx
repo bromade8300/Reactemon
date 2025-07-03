@@ -31,6 +31,24 @@ export default function PokemonListPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [allTypes, setAllTypes] = useState<string[]>([])
 
+  // État pour le formulaire de création
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newPokemon, setNewPokemon] = useState({
+    id: '',
+    name: '',
+    type_1: '',
+    type_2: '',
+    height: '',
+    weight: '',
+    description: '',
+    hp: '',
+    attack: '',
+    defense: '',
+    sp_attack: '',
+    sp_defense: '',
+    speed: ''
+  });
+
   useEffect(() => {
     fetchPokemon()
     loadFavorites()
@@ -47,20 +65,37 @@ export default function PokemonListPage() {
       const typesSet = new Set<string>()
 
       for (let i = 1; i <= 151; i++) {
-        const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${i}`)
+        const response = await fetch(`http://localhost:3001/pokemons/${i}`)
         const data = await response.json()
+
+        // Extraction robuste des types
+        let types: string[] = [];
+        if (data.types && Array.isArray(data.types)) {
+          types = data.types.map((t: any) => {
+            if (typeof t === 'string') return t;
+            if (t.type && typeof t.type.name === 'string') return t.type.name;
+            if (t.name) return t.name;
+            return String(t);
+          });
+        } else if (data.type_1 || data.type) {
+          // type_1 (backend) ou type (ancien format)
+          types = [data.type_1 || data.type];
+          if (data.type_2) types.push(data.type_2);
+        }
 
         const pokemon: Pokemon = {
           id: data.id,
           name: data.name,
-          types: data.types.map((type: any) => type.type.name),
-          image: data.sprites.front_default,
+          types: types,
+          image: `/sprites/${data.id.toString().padStart(3, "0")}.png`,
           height: data.height,
           weight: data.weight,
         }
 
         pokemonData.push(pokemon)
-        pokemon.types.forEach((type) => typesSet.add(type))
+        types.forEach((type) => {
+          if (typeof type === 'string') typesSet.add(type)
+        })
       }
 
       setAllPokemon(pokemonData)
@@ -122,6 +157,42 @@ export default function PokemonListPage() {
       setAllPokemon((prev) => prev.filter((p) => p.id !== pokemonId))
     }
   }
+
+  const handleCreatePokemon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const body = {
+        id: Number(newPokemon.id),
+        name: newPokemon.name,
+        type_1: newPokemon.type_1,
+        type_2: newPokemon.type_2,
+        height: newPokemon.height + ' m',
+        weight: newPokemon.weight + ' kg',
+        description: newPokemon.description,
+        hp: Number(newPokemon.hp),
+        attack: Number(newPokemon.attack),
+        defense: Number(newPokemon.defense),
+        sp_attack: Number(newPokemon.sp_attack),
+        sp_defense: Number(newPokemon.sp_defense),
+        speed: Number(newPokemon.speed)
+      };
+      const response = await fetch('http://localhost:3001/pokemons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) throw new Error('Erreur lors de la création');
+      setShowCreateForm(false);
+      setNewPokemon({
+        id: '', name: '', type_1: '', type_2: '', height: '', weight: '', description: '',
+        hp: '', attack: '', defense: '', sp_attack: '', sp_defense: '', speed: ''
+      });
+      fetchPokemon();
+    } catch (err) {
+      alert('Erreur lors de la création du Pokémon');
+      console.error(err);
+    }
+  };
 
   const getTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
@@ -189,15 +260,48 @@ export default function PokemonListPage() {
               </div>
               <h1 className="pixel-title">POKÉDEX</h1>
             </Link>
-            <Link href="/">
-              <Button className="pixel-button-small">
-                <Home className="w-4 h-4 mr-2" />
-                ACCUEIL
+            <div className="flex gap-2">
+              <Button className="pixel-button-small" onClick={() => setShowCreateForm(true)}>
+                + AJOUTER UN POKÉMON
               </Button>
-            </Link>
+              <Link href="/">
+                <Button className="pixel-button-small">
+                  <Home className="w-4 h-4 mr-2" />
+                  ACCUEIL
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
+
+      {/* Formulaire de création */}
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <form onSubmit={handleCreatePokemon} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md space-y-4">
+            <h2 className="text-xl font-bold mb-4">Ajouter un Pokémon</h2>
+            <div className="grid grid-cols-2 gap-2">
+              <input required type="number" placeholder="ID" value={newPokemon.id} onChange={e => setNewPokemon({ ...newPokemon, id: e.target.value })} className="pixel-input" />
+              <input required type="text" placeholder="Nom" value={newPokemon.name} onChange={e => setNewPokemon({ ...newPokemon, name: e.target.value })} className="pixel-input" />
+              <input required type="text" placeholder="Type 1" value={newPokemon.type_1} onChange={e => setNewPokemon({ ...newPokemon, type_1: e.target.value })} className="pixel-input" />
+              <input type="text" placeholder="Type 2" value={newPokemon.type_2} onChange={e => setNewPokemon({ ...newPokemon, type_2: e.target.value })} className="pixel-input" />
+              <input required type="number" step="0.1" placeholder="Taille (m)" value={newPokemon.height} onChange={e => setNewPokemon({ ...newPokemon, height: e.target.value })} className="pixel-input" />
+              <input required type="number" step="0.1" placeholder="Poids (kg)" value={newPokemon.weight} onChange={e => setNewPokemon({ ...newPokemon, weight: e.target.value })} className="pixel-input" />
+              <input required type="number" placeholder="HP" value={newPokemon.hp} onChange={e => setNewPokemon({ ...newPokemon, hp: e.target.value })} className="pixel-input" />
+              <input required type="number" placeholder="Attaque" value={newPokemon.attack} onChange={e => setNewPokemon({ ...newPokemon, attack: e.target.value })} className="pixel-input" />
+              <input required type="number" placeholder="Défense" value={newPokemon.defense} onChange={e => setNewPokemon({ ...newPokemon, defense: e.target.value })} className="pixel-input" />
+              <input required type="number" placeholder="Atq. Spé" value={newPokemon.sp_attack} onChange={e => setNewPokemon({ ...newPokemon, sp_attack: e.target.value })} className="pixel-input" />
+              <input required type="number" placeholder="Déf. Spé" value={newPokemon.sp_defense} onChange={e => setNewPokemon({ ...newPokemon, sp_defense: e.target.value })} className="pixel-input" />
+              <input required type="number" placeholder="Vitesse" value={newPokemon.speed} onChange={e => setNewPokemon({ ...newPokemon, speed: e.target.value })} className="pixel-input" />
+            </div>
+            <textarea placeholder="Description" value={newPokemon.description} onChange={e => setNewPokemon({ ...newPokemon, description: e.target.value })} className="pixel-input w-full" />
+            <div className="flex gap-2 justify-end">
+              <Button type="button" className="pixel-button-danger" onClick={() => setShowCreateForm(false)}>Annuler</Button>
+              <Button type="submit" className="pixel-button-success">Créer</Button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div className="container mx-auto px-4 py-8">
         {/* Filters */}
@@ -233,7 +337,7 @@ export default function PokemonListPage() {
                 <SelectItem value="all">TOUS LES TYPES</SelectItem>
                 {allTypes.map((type) => (
                   <SelectItem key={type} value={type}>
-                    {type.toUpperCase()}
+                    {(type || '').toString().toUpperCase()}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -328,10 +432,9 @@ export default function PokemonListPage() {
 
                     <h3 className="pixel-name cursor-pointer">{pokemon.name.toUpperCase()}</h3>
 
-                    <div className="flex flex-wrap gap-1 justify-center">
-                      {pokemon.types.map((type) => (
+                    <div className="flex flex-wrap gap-1 justify-center">                      {pokemon.types.map((type) => (
                         <Badge key={type} className={`pixel-type ${getTypeColor(type)}`}>
-                          {type.toUpperCase()}
+                          {(type || '').toString().toUpperCase()}
                         </Badge>
                       ))}
                     </div>
